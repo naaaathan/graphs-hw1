@@ -19,30 +19,36 @@ export caminho,
 Devolve um grafo caminho com `n` vértices.
 """
 #caminho(n::Int)::Grafo = nulo()
-
-function caminho(n::Int)
-    grf = nulo()
-
-    #Gerar os n vértices do caminho
-    for u = 1:n
-        novo_vértice!(grf)
-    end # for
+function geraGrafoCaminho(grf::Grafo,n::Int)
 
     #Pegar um vertices(g) aleatório e criar uma aresta entre eles de forma
     # a respeitar a definição de caminho, ou seja, n repetir arestas e vértices
-    for x = 1:n
+    for x in 1:n
         if mod(x, 2) == 0
             nova_aresta!(grf, x, x - 1)
         end
     end
-
-    for x = 1:n
+    
+    for x in 1:n
         if mod(x, 2) == 0
             nova_aresta!(grf, x, x - 1)
         elseif x != 1
             nova_aresta!(grf, x, x - 1)
         end
     end
+
+end # function
+
+
+function caminho(n::Int)
+    grf = nulo()
+
+    #Gerar os n vértices do caminho
+    for u in 1:n
+        novo_vértice!(grf)
+    end # for
+
+    geraGrafoCaminho(grf,n)
 
     return grf
 
@@ -59,11 +65,11 @@ Veja o exercício E 1.6 do livro do Paulo Feofiloff.
 
 function criaColuna(g::Grafo, p::Int, q::Int, linhas::Int)
 
-    for x = p:q-1
+    for x in p:q-1
         nova_aresta!(g, x, x + 1)
     end
 
-    for y = p:q
+    for y in p:q
         nova_aresta!(g, y, y + linhas)
     end
 
@@ -75,14 +81,14 @@ function geraGrade(grf::Grafo, p::Int, q::Int)
     #Criar p linhas e q colunas, pxq vértices
     qtd_vertices = p * q
 
-    for n = 1:qtd_vertices
+    for n in 1:qtd_vertices
         novo_vértice!(grf)
     end
 
     visited = false
     coluna = 1
 
-    for x = 1:qtd_vertices
+    for x in 1:qtd_vertices
         if mod(x, p) == 0
             visited = false
             continue
@@ -101,9 +107,11 @@ function grade(p::Int, q::Int)
     grf = nulo()
 
     grf = geraGrade(grf, p, q)
+    # Grade deve conter p colunas e q linhas, tal que linhas e colunas tem arestas com as adjacentes
     # 1 4 7 10
     # 2 5 8 11
     # 3 6 9 12
+
 end
 
 
@@ -118,7 +126,7 @@ Veja o exercício E 1.8 do livro do Paulo Feofiloff.
 function criar_arestas_horizontalmente_adjacentes(grf::Grafo, t::Int)
     qtd_vertices = t * t
 
-    for x = 1:qtd_vertices
+    for x in 1:qtd_vertices
         counter = t
         while é_vértice(grf, x) && é_vértice(grf, x + counter)
             nova_aresta!(grf, x, x + counter)
@@ -135,7 +143,7 @@ function criar_arestas_verticalmente_adjacentes(grf::Grafo, t::Int)
     colunas = []
     coluna_x = []
 
-    for x = 1:qtd_vertices
+    for x in 1:qtd_vertices
         if mod(x, t) == 0
             push!(coluna_x, x)
             push!(colunas, coluna_x)
@@ -145,9 +153,9 @@ function criar_arestas_verticalmente_adjacentes(grf::Grafo, t::Int)
         end
     end
 
-    for y = 1:length(colunas)
+    for y in 1:length(colunas)
         y_coluna = colunas[y]
-        for z = 1:length(y_coluna)
+        for z in 1:length(y_coluna)
             counter = 1
             while é_vértice(grf, z) &&
                       z + counter <= length(y_coluna) &&
@@ -168,7 +176,7 @@ function criar_arestas_diagonalmente_adjacentes(grf::Grafo, t::Int)
     colunas = []
     colunasTemp = []
 
-    for n = 1:qtd_vertices
+    for n in 1:qtd_vertices
         if mod(n, t) == 0
             push!(colunasTemp, n)
             push!(colunas, colunasTemp)
@@ -178,9 +186,9 @@ function criar_arestas_diagonalmente_adjacentes(grf::Grafo, t::Int)
         end
     end
 
-    for p = 1:length(colunas)
+    for p in 1:length(colunas)
         coluna = colunas[p]
-        for q = 1:length(coluna)
+        for q in 1:length(coluna)
             val_col = p
             val_lin = q
 
@@ -233,9 +241,14 @@ function dama(t::Int)
     n_vertices = t * t
 
     #Criar vértices do tabuleiro
-    for x = 1:n_vertices
+    for x in 1:n_vertices
         novo_vértice!(grf)
     end
+
+
+    #Os movimentos possiveis da dama podem ser dividos em
+    #horizontal vertical e diagonal, split em functions para
+    #reutilizar em outros movimentos
 
     criar_arestas_horizontalmente_adjacentes(grf, t)
     criar_arestas_verticalmente_adjacentes(grf, t)
@@ -256,18 +269,12 @@ Dica: para se inspirar, leia o documento em
     https://bradfieldcs.com/algos/graphs/knights-tour
 """
 #cavalo(t::Int)::Grafo = nulo()
-
-function cavalo(t::Int)
-
-    grf = nulo()
-    qtd_vertices = t * t
-
-    novos_vértices!(grf,qtd_vertices)
+function geraGrafoMovimentoCavalo(grf::Grafo,qtd_vertices::Int,t::Int)
 
     colunas = []
     coluna_x = []
 
-    for x = 1:qtd_vertices
+    for x in 1:qtd_vertices
         if mod(x, t) == 0
             push!(coluna_x, x)
             push!(colunas, coluna_x)
@@ -278,6 +285,7 @@ function cavalo(t::Int)
     end
 
     #Cavalo tem posicionamento de 2 colunas e 1 linha ou 2 linhas e 1 coluna
+    #da posição atual..logo calculando tais valores criamos as arestas possiveis
     for i in 1:t
         for j in 1:t
             if i+2 <= t && j+1 <= t
@@ -290,19 +298,29 @@ function cavalo(t::Int)
                 nova_aresta!(grf,colunas[i][j],colunas[i+1][j+2])
             end
             if i-2 > 0 && j - 1 > 0
-                 nova_aresta!(grf,colunas[i][j],colunas[i-2][j-1])
+                nova_aresta!(grf,colunas[i][j],colunas[i-2][j-1])
             end
             if i -2 > 0 && j+1 <= t
-                 nova_aresta!(grf,colunas[i][j],colunas[i-2][j+1])
+                nova_aresta!(grf,colunas[i][j],colunas[i-2][j+1])
             end
             if i-1 > 0 && j-2 > 0
-                 nova_aresta!(grf,colunas[i][j],colunas[i-1][j-2])
+                nova_aresta!(grf,colunas[i][j],colunas[i-1][j-2])
             end
             if i-1 > 0 && j+2 <= t
-                 nova_aresta!(grf,colunas[i][j],colunas[i-1][j+2])
+                nova_aresta!(grf,colunas[i][j],colunas[i-1][j+2])
             end
         end
     end
+end # function
+
+function cavalo(t::Int)
+
+    grf = nulo()
+    qtd_vertices = t * t
+
+    novos_vértices!(grf,qtd_vertices)
+
+    geraGrafoMovimentoCavalo(grf,qtd_vertices,t)
 
     return grf
 
@@ -321,10 +339,11 @@ function bispo(t::Int)
     n_vertices = t * t
 
     #Criar vértices do tabuleiro
-    for x = 1:n_vertices
+    for x in 1:n_vertices
         novo_vértice!(grf)
     end
 
+    #Bispo se movimenta apenas pelas diagonais..reaproveitar função da dama
     criar_arestas_diagonalmente_adjacentes(grf, t)
 
     return grf
@@ -343,10 +362,11 @@ function torre(t::Int)
     qtd_vertices = t * t
 
     #Criar vértices do tabuleiro
-    for x = 1:qtd_vertices
+    for x in 1:qtd_vertices
         novo_vértice!(grf)
     end
 
+    #Torres se movimentam pela horizontal e vertical..reaproveitar funções já escritas da dama
     criar_arestas_verticalmente_adjacentes(grf, t)
     criar_arestas_horizontalmente_adjacentes(grf, t)
 
@@ -360,21 +380,12 @@ Devolve o grafo do rei |t|-por-|t|.
 Veja o exercício E 1.12 do livro do Paulo Feofiloff.
 """
 #rei(t::Int)::Grafo = nulo()
-function rei(t::Int)
-
-    grf = nulo()
-
-    qtd_vertices = t * t
-
-    #Criar vértices do tabuleiro
-    for x = 1:qtd_vertices
-        novo_vértice!(grf)
-    end
+function geraGrafoMovimentoRei(grf::Grafo,qtd_vertices::Int,t::Int)
 
     colunas = []
     colunasTemp = []
 
-    for n = 1:qtd_vertices
+    for n in 1:qtd_vertices
         if mod(n, t) == 0
             push!(colunasTemp, n)
             push!(colunas, colunasTemp)
@@ -384,12 +395,12 @@ function rei(t::Int)
         end
     end
 
-    # 11 21 31
-    # 12 22 32
-    # 13 23 33
+        # 11 21 31
+        # 12 22 32
+        # 13 23 33
 
-    for i = 1:length(colunas)
-        for j = 1:length(colunas[i])
+    for i in 1:length(colunas)
+        for j in 1:length(colunas[i])
             if j < t && é_vértice(grf, colunas[i][j+1])
                 nova_aresta!(grf, colunas[i][j], colunas[i][j+1])
             end
@@ -416,6 +427,21 @@ function rei(t::Int)
             end
         end
     end
+end # function
+
+function rei(t::Int)
+
+    grf = nulo()
+
+    qtd_vertices = t * t
+
+    #Criar vértices do tabuleiro
+    for x in 1:qtd_vertices
+        novo_vértice!(grf)
+    end
+
+    geraGrafoMovimentoRei(grf,qtd_vertices,t)
+
     return grf
 end # function
 
@@ -425,11 +451,39 @@ end # function
 Devolve o grafo do cubo de dimensão |k|.
 Veja o exercício E 1.14 do livro do Paulo Feofiloff.
 """
+
 #cubo(k)::Grafo = nulo()
 function cubo(k::Int)
 
+    grf = nulo()
 
-    return nulo()
+    #Número de vértices do cubo segue a exponencial de 2 2^k
+    nr_vertices = (2^k)
+    novos_vértices!(grf,nr_vertices)
+
+    # 1 3
+    # 2 4
+
+    #Usar a função string para saber quantos valores são diferentes no valor binario
+    #se tiver exatamente 1 um a mais ou 1 um a menos logo são adjacente segundo a definição
+    #do livro.
+
+    for i in 0:nr_vertices+1
+        string_binario_i = string(i,base=2,pad=k+1)
+        for j in 0:nr_vertices+1
+            diferenca = 0
+            string_binario_j = string(j,base=2,pad=k+1)
+            for p in 1:length(string_binario_i)
+                if string_binario_i[p] != string_binario_j[p]
+                    diferenca+=1
+                end
+            end
+            if diferenca == 1
+                 nova_aresta!(grf,i+1,j+1)
+            end
+        end
+    end
+    return grf
 end
 
 
@@ -499,12 +553,12 @@ function completo(n::Int)
     grf = nulo()
 
     #Criar vértices do tabuleiro
-    for x = 1:n
+    for x in 1:n
         novo_vértice!(grf)
     end
 
-    for i = 1:n
-        for j = 1:n
+    for i in 1:n
+        for j in 1:n
             if i != j
                 nova_aresta!(grf, i, j)
             end
